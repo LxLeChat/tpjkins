@@ -1,0 +1,85 @@
+// def datacenters
+pipeline {
+//    agent any 
+
+//     tools {
+//         // Install the Maven version configured as "M3" and add it to the path.
+//         maven "MAVEN3"
+//         jdk "JDK17"
+//     }
+//     stages {
+        stage('Compile et tests') {
+            steps {
+                echo 'Unit test et packaging'
+                sh "./mvnw -Dmaven.test.failure.ignore=true clean package"
+            }
+
+            post {
+                // If Maven was able to run the tests, even if some of the test
+                // failed, record the test results and archive the jar file.
+                always {
+                    junit '**/target/surefire-reports/TEST-*.xml'
+                }  
+                success {
+                    archiveArtifacts '**/target/*.jar'
+                }
+            }
+        }
+        // stage('Analyse qualité et vulnérabilités') {
+        //     parallel {
+        //         stage('Vulnérabilités') {
+        //             steps {
+        //                 echo 'Tests de Vulnérabilités OWASP'
+        //                 sh "./mvnw -DskipTests verify"
+        //             }
+                    
+        //         }
+        //          stage('Analyse Sonar') {
+        //              steps {
+        //                 script{env.SONAR = 'sqa_39fc68aef2cb98f024fd1cf897f033b4093c3244'}
+        //                 sh "./mvnw -Dsonar.login=${SONAR} clean integration-test sonar:sonar"
+        //              }
+        //         }
+        //     }
+        // }
+
+        
+        stage('Déploiement intégration') {
+            // when   {
+            //     branch 'dev-ci'
+            //     beforeOptions true
+            // }
+            // input {
+            //     message "Dans quel DataCenter?"
+            //     parameters {
+            //         choice name: 'DataCenter', choices: ['Paris', 'Lillle', 'Lyon']
+            //         }
+            //     }
+                
+                
+            steps {
+                // echo "Déploiement intégration Copy To ${DataCenter} "
+                echo "Déploiement intégration Copy To"
+                // sh "cp application/target/*.jar ${DataCenter}/"
+                script{
+                    def props = readJSON file: 'datacenters.json'
+                    datacenters = props.datacenters
+                    // for (int i = 0; i < props.datacenters.size(); i++) {
+                    //     echo props.datacenters[i]
+                    //     sh "cp application/target/*.jar ${props.datacenters[i]}/"
+                    // }
+                } 
+            }
+        }
+
+        stage ('plop'){
+            steps{
+                echo "mes datacenters: $datacenters"
+            } 
+            
+        } 
+
+     }
+    
+}
+
